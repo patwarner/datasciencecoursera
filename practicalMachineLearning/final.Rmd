@@ -1,0 +1,134 @@
+---
+title: "Final Project: Practical Machine Learning"
+author: "pat warner"
+date: "Wednesday, October 22, 2014"
+output: html_document
+---
+## Scope
+
+This project consists of taking training and testing data from fitbit customers and processing, cleaning,
+exploring, and shaping the data in order to develop a machine learning system that can predict the variable
+'classe'on a held out testing data set.
+
+## Loading libraries, local paths, and data
+```{r}
+library(caret)
+library(e1071)
+library(doParallel)
+
+path <- c("E:/Coursera/PracticalML/Project/")
+
+training <- read.csv(paste(path,"pml-training.csv",sep=""),
+sep=",",stringsAsFactors=FALSE, na.strings=c("",NA), header=TRUE)
+
+testing <- read.csv(paste(path,"pml-testing.csv",sep=""),
+sep=",",stringsAsFactors=FALSE, na.strings=c("",NA), header=TRUE)
+
+```
+
+## Cleaning, viewing, and processing data.
+* Data was initially explored using the summary command and it was noted that 
+several variables only contained ~3.0% of complete data. In order to reduce unnecessary features,
+the data features that contained 97% or more NA elements were pruned.
+
+* feature classes were transformed to factor and numeric classes where appropriate.
+
+* cleaned training and test dataframes where created for the learners.
+
+```{r}
+# create function to prune predictors containing 97% or more NAs
+NA.pct <- function(x) length(x[is.na(x)])/length(x)
+NA.cols <- apply(training,2,NA.pct)
+trn.cln  <- training[,NA.cols <= 0.97]
+tst.cln <- testing[,NA.cols <= 0.97]
+
+# plotted and inspected individual train and test variables and
+# adjusted to proper classes, tst[,60] == same as tst[,1] can be removed
+# first few index and date variables removed as they have little additional predictive value.
+numerical.trn <- data.frame(lapply(trn.cln[,-c(1:6,60)],as.numeric))
+factor.trn <- data.frame(lapply(trn.cln[,c(6,60)],as.factor))
+numerical.tst <- data.frame(lapply(tst.cln[,-c(1:6,60)],as.numeric))
+factor.tst <- data.frame(lapply(tst.cln[,c(6)],as.factor))
+
+# create train and test data frames of predictor and target variables
+predict.trn <- data.frame(factor.trn[,1],numerical.trn[,1:dim(numerical.trn)[2]])
+target.trn <- factor.trn[,2]
+predict.tst <- data.frame(factor.tst[,1],numerical.tst[,1:dim(numerical.tst)[2]])
+
+trn.dataframe <- data.frame(predict.trn,target.trn)
+tst.dataframe <- data.frame(predict.tst)
+
+names(tst.dataframe)[1] <- names(trn.dataframe)[1] <- "new_window"
+
+```
+
+## Create and test models.
+* The first model created was an SVM (e1071) and it took only 3 minutes to run, but returned about 96.1% accuracy on the 
+training data set. No additional preprocessing was done on the data sets.
+* The second model created was a randomforest model using the caret train wrapper.  The model had a great in sample
+accuracy of 100%, but the time to run was long ~1/2 hour. No additional processing was done on the data sets.
+* The final model that was decided upon, was to use a random forest from the caret package, with a traincontrol option to use 10 fold cross validation. The cross validation would give more confidence in out of sample data, and accuracy averaged across the 10 validation folds was 99.8% for the final model.
+* Since the single random forest took so long to run, it was decided to use the Rparallel package, along with caret's built in capability to take advantage of parallel processing to run the final model. Total time was ~1hr.
+
+```{r}
+#fit and try simple SVM model
+svm.mod <- svm( target.trn ~., data=trn.dataframe )
+svm.pred.trn <- predict( svm.mod, newdata=trn.dataframe )
+#SVM results  0.961 accuracy
+confusionMatrix(svm.pred.trn,trn.dataframe$target.trn)
+
+
+#fit and try simple random forest model 
+rf.mod <- train(target.trn ~., data=trn.dataframe, method="rf")#1/2 hour
+rf.pred.trn <- predict( rf.mod, newdata=trn.dataframe )
+confusionMatrix(rf.pred.trn, trn.dataframe$target.trn) #100% accuracy
+
+# 10 fold cross validation for random forest
+
+cl <- makeCluster(detectCores())
+registerDoParallel(cl)
+
+fitControl <- trainControl(method = "cv",
+number = 10)
+
+rf.cv.mod <- train(target.trn ~ ., data = trn.dataframe,
+method = "rf", trControl = fitControl, verbose = FALSE)
+rf.cv.pred.trn <- predict(rf.cv.mod, newdata=trn.dataframe)
+rf.cv.pred.tst <- predict(rf.cv.mod, newdata=tst.dataframe)
+rf.cv.mod
+confusionMatrix(rf.cv.pred.trn, trn.dataframe$target.trn) #100% accuracy
+
+stopCluster(cl)
+
+
+# while some of the development was edited for brevity,
+# the author did not find any need to preprocess any of the data
+# or remove outliers, CV results were 99.8% accurate with 10 folds.
+
+
+```
+
+## Write out and submit prediction data.
+
+
+* function from the project description was used to write out prediction data for submission.
+
+
+```{r}
+
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=paste(path,filename,sep=""),quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+
+pml_write_files(as.character(rf.cv.pred.tst))
+
+```
+
+## Conlusion
+
+The final project was successfully completed. Author felt that 99.8% 10 Fold CVaccuracy was sufficient to try the model
+on the testing dataset. Submitted testing set had a 100% accuracy from the submission feedback.+
