@@ -116,13 +116,13 @@ names(tst.dataframe)[1] &lt;- names(trn.dataframe)[1] &lt;- &quot;new_window&quo
 <ul>
 <li>The first model created was an SVM (e1071) and it took only 3 minutes to run, but returned about 96.1% accuracy on the training data set. No additional preprocessing was done on the data sets.</li>
 <li>The second model created was a randomforest model using the caret train wrapper. The model had a great in sample accuracy of 100%, but the time to run was long ~1/2 hour. No additional processing was done on the data sets.</li>
-<li>The final model that was decided upon, was to use a random forest from the caret package, with a traincontrol option to use 10 fold cross validation. The cross validation would give more confidence in out of sample data, and accuracy averaged across the 10 validation folds was 99.8% for the final model.</li>
+<li>The final model that was decided upon, was to use a random forest from the caret package, with a traincontrol option to use 10 fold cross validation. The cross validation would give more confidence in out of sample data, and accuracy averaged across the 10 validation folds was 99.9% for the final model.</li>
 <li>Since the single random forest took so long to run, it was decided to use the Rparallel package, along with caret’s built in capability to take advantage of parallel processing to run the final model. Total time was ~1hr.</li>
 </ul>
 <pre class="r"><code>#fit and try simple SVM model
 svm.mod &lt;- svm( target.trn ~., data=trn.dataframe )
 svm.pred.trn &lt;- predict( svm.mod, newdata=trn.dataframe )
-#SVM results  0.961 accuracy
+#SVM results  0.961 accuracy on train data
 confusionMatrix(svm.pred.trn,trn.dataframe$target.trn)</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
@@ -156,12 +156,12 @@ confusionMatrix(svm.pred.trn,trn.dataframe$target.trn)</code></pre>
 ## Detection Prevalence   0.2935   0.1844   0.1888   0.1543   0.1790
 ## Balanced Accuracy      0.9902   0.9642   0.9734   0.9544   0.9846</code></pre>
 <pre class="r"><code>#fit and try simple random forest model 
-rf.mod &lt;- train(target.trn ~., data=trn.dataframe, method=&quot;rf&quot;)#1/2 hour</code></pre>
+rf.mod &lt;- train(target.trn ~., data=trn.dataframe, method=&quot;rf&quot;)# 1/2 hour</code></pre>
 <pre><code>## Loading required package: randomForest
 ## randomForest 4.6-10
 ## Type rfNews() to see new features/changes/bug fixes.</code></pre>
 <pre class="r"><code>rf.pred.trn &lt;- predict( rf.mod, newdata=trn.dataframe )
-confusionMatrix(rf.pred.trn, trn.dataframe$target.trn) #100% accuracy</code></pre>
+confusionMatrix(rf.pred.trn, trn.dataframe$target.trn) # 100% accuracy on train data</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
@@ -215,18 +215,18 @@ rf.cv.mod</code></pre>
 ## No pre-processing
 ## Resampling: Cross-Validated (10 fold) 
 ## 
-## Summary of sample sizes: 17659, 17660, 17660, 17660, 17658, 17660, ... 
+## Summary of sample sizes: 17659, 17659, 17660, 17661, 17661, 17659, ... 
 ## 
 ## Resampling results across tuning parameters:
 ## 
 ##   mtry  Accuracy  Kappa  Accuracy SD  Kappa SD
-##    2    0.997     0.996  0.001684     0.002131
-##   28    0.999     0.998  0.000548     0.000693
-##   54    0.996     0.995  0.001418     0.001794
+##    2    0.996     0.995  0.001890     0.00239 
+##   28    0.998     0.998  0.000797     0.00101 
+##   54    0.997     0.996  0.001561     0.00197 
 ## 
 ## Accuracy was used to select the optimal model using  the largest value.
 ## The final value used for the model was mtry = 28.</code></pre>
-<pre class="r"><code>confusionMatrix(rf.cv.pred.trn, trn.dataframe$target.trn) #100% accuracy</code></pre>
+<pre class="r"><code>confusionMatrix(rf.cv.pred.trn, trn.dataframe$target.trn) # 99.9% accuracy on CV train data</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
@@ -282,7 +282,7 @@ pml_write_files(as.character(rf.cv.pred.tst))</code></pre>
 </div>
 <div id="conlusion" class="section level2">
 <h2>Conlusion</h2>
-<p>The final project was successfully completed. Author felt that 99.8% 10 Fold CVaccuracy was sufficient to try the model on the testing dataset. Submitted testing set had a 100% accuracy from the submission feedback.+</p>
+<p>The final project was successfully completed. Author felt that 99.9% 10 Fold CV training accuracy was sufficient to try the model on the testing dataset.The 99.9% CV estimate is also the estimate of accuracy that Author expects to obtain on submitted out of sample testing results. Submitted testing set had a 100% accuracy from the submission feedback. Clearly, the 99.9% CV expected value and the actual 100% submission value were in close agreement.</p>
 </div>
 
 

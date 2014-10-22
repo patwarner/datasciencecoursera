@@ -67,21 +67,21 @@ names(tst.dataframe)[1] <- names(trn.dataframe)[1] <- "new_window"
 training data set. No additional preprocessing was done on the data sets.
 * The second model created was a randomforest model using the caret train wrapper.  The model had a great in sample
 accuracy of 100%, but the time to run was long ~1/2 hour. No additional processing was done on the data sets.
-* The final model that was decided upon, was to use a random forest from the caret package, with a traincontrol option to use 10 fold cross validation. The cross validation would give more confidence in out of sample data, and accuracy averaged across the 10 validation folds was 99.8% for the final model.
+* The final model that was decided upon, was to use a random forest from the caret package, with a traincontrol option to use 10 fold cross validation. The cross validation would give more confidence in out of sample data, and accuracy averaged across the 10 validation folds was 99.9% for the final model.
 * Since the single random forest took so long to run, it was decided to use the Rparallel package, along with caret's built in capability to take advantage of parallel processing to run the final model. Total time was ~1hr.
 
 ```{r}
 #fit and try simple SVM model
 svm.mod <- svm( target.trn ~., data=trn.dataframe )
 svm.pred.trn <- predict( svm.mod, newdata=trn.dataframe )
-#SVM results  0.961 accuracy
+#SVM results  0.961 accuracy on train data
 confusionMatrix(svm.pred.trn,trn.dataframe$target.trn)
 
 
 #fit and try simple random forest model 
-rf.mod <- train(target.trn ~., data=trn.dataframe, method="rf")#1/2 hour
+rf.mod <- train(target.trn ~., data=trn.dataframe, method="rf")# 1/2 hour
 rf.pred.trn <- predict( rf.mod, newdata=trn.dataframe )
-confusionMatrix(rf.pred.trn, trn.dataframe$target.trn) #100% accuracy
+confusionMatrix(rf.pred.trn, trn.dataframe$target.trn) # 100% accuracy on train data
 
 # 10 fold cross validation for random forest
 
@@ -96,7 +96,7 @@ method = "rf", trControl = fitControl, verbose = FALSE)
 rf.cv.pred.trn <- predict(rf.cv.mod, newdata=trn.dataframe)
 rf.cv.pred.tst <- predict(rf.cv.mod, newdata=tst.dataframe)
 rf.cv.mod
-confusionMatrix(rf.cv.pred.trn, trn.dataframe$target.trn) #100% accuracy
+confusionMatrix(rf.cv.pred.trn, trn.dataframe$target.trn) # 99.9% accuracy on CV train data
 
 stopCluster(cl)
 
@@ -130,5 +130,4 @@ pml_write_files(as.character(rf.cv.pred.tst))
 
 ## Conlusion
 
-The final project was successfully completed. Author felt that 99.8% 10 Fold CVaccuracy was sufficient to try the model
-on the testing dataset. Submitted testing set had a 100% accuracy from the submission feedback.+
+The final project was successfully completed. Author felt that 99.9% 10 Fold CV training accuracy was sufficient to try the model on the testing dataset.The 99.9% CV estimate is also the estimate of accuracy that Author expects to obtain on submitted out of sample testing results.  Submitted testing set had a 100% accuracy from the submission feedback. Clearly, the 99.9% CV expected value and the actual 100% submission value were in close agreement.
