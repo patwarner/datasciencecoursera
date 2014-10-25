@@ -130,4 +130,4 @@ pml_write_files(as.character(rf.cv.pred.tst))
 
 ## Conlusion
 
-The final project was successfully completed. Author felt that 99.8% 10 Fold CV training accuracy was sufficient to try the model on the testing dataset.The 99.8% CV estimate is also the estimate of accuracy that Author expects to obtain on submitted out of sample testing results.  Submitted testing set had a 100% accuracy from the submission feedback. Clearly, the 99.8% CV expected value and the actual 100% submission value were in close agreement.
+The final project was successfully completed. Author felt that 99.8% 10 Fold CV training accuracy was sufficient to try the model on the testing dataset.The 99.8% CV estimate is also the estimate of accuracy that Author expects to obtain on submitted out of sample testing results.  Submitted testing set had a 100% accuracy from the submission feedback. Clearly, the 99.8% CV expected value and the actual 100% submission value were in close agreement. Note that the error is simply 1-accuracy, so that the CV estimated error is 1-99.8/100 = .002 = 0.2%.  Out of sample testing error is 1-1 = 0%.
